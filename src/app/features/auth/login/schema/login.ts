@@ -1,8 +1,8 @@
-import { z } from 'zod';
+import { z } from "zod"
 
 export const loginSchema = z.object({
-  username: z.string().nonempty('ឈ្មោះគណនីចាំបាច់ត្រូវបំពេញ'),
-  password: z.string().nonempty('ពាក្យសម្ងាត់ចំបាច់ត្រូវបំពេញ'),
-});
+  username: z.string().nonempty("Username is required"),
+  password: z.string().nonempty("Password is required"),
+})
 
-export type LoginFormValues = z.infer<typeof loginSchema>;
+export type LoginFormValues = z.infer<typeof loginSchema>
