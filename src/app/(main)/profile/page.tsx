@@ -1,8 +1,8 @@
 import { getProfile } from "@/api/profile/actions"
+import { ProfileScreen } from "@/app/features/main/profile"
 
 export default async function ProfilePage() {
   const { data: userProfile, error } = await getProfile()
-  console.log({ userProfile })
 
   if (error) {
     return (
@@ -21,8 +21,6 @@ export default async function ProfilePage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
-     profile page
-    </div>
+    <ProfileScreen data={userProfile} />
   )
 }
