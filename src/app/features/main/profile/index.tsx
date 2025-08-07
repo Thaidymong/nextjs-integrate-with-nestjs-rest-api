@@ -63,12 +63,12 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ data }) => {
 
           <div className="mt-4 text-left ml-4">
             <h1 className="text-2xl font-bold gap-2">
-             {data?.name}
+              {data?.fullnameEn}
             </h1>
-            <div className="flex py-2"> 
+            {/* <div className="flex py-2">
               <MapPinned className="h-4 w-4 text-gray-400" />
               <p className="text-gray-400 pl-2 text-sm"> {data?.location}</p>
-            </div>
+            </div> */}
             <div className="flex py-2">
               <Phone className="h-4 w-4 text-gray-400" />
               <p className="text-gray-400 pl-2 text-sm"> {data?.phoneNumber}</p>

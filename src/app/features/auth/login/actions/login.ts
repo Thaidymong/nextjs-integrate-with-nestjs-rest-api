@@ -2,8 +2,7 @@
 
 import { cookies } from "next/headers"
 import { LoginActionResponse, LoginInput, LoginSuccessData, RestErrorResponse } from "../type/login"
-
-const LOGIN_API_ENDPOINT = "http://localhost:8080/api/v1/authentication/login"
+import { LOGIN_API_ENDPOINT } from "@/common/constants/api"
 
 export const login = async (input: LoginInput): Promise<LoginActionResponse> => {
   const cookieStore = cookies()
@@ -22,7 +21,6 @@ export const login = async (input: LoginInput): Promise<LoginActionResponse> => 
       try {
         errorData = await response.json()
       } catch (jsonError) {
-        console.error("Failed to parse error response JSON:", jsonError)
         return {
           error: {
             message: response.statusText || "Unknown error from API",
@@ -33,8 +31,6 @@ export const login = async (input: LoginInput): Promise<LoginActionResponse> => 
           data: null,
         }
       }
-
-      console.error("API Error Response (Status:", response.status, "):", errorData)
 
       const errorMessage = errorData?.error?.message || response.statusText || "Authentication failed"
       const errorCode = errorData?.error?.error || "AUTHENTICATION_ERROR"
@@ -57,6 +53,8 @@ export const login = async (input: LoginInput): Promise<LoginActionResponse> => 
     // Access tokens from the nested 'data' object
     const accessToken = responseBody?.data?.access_token
     const refreshToken = responseBody?.data?.refresh_token
+    console.log({ refreshToken })
+    console.log({ accessToken })
 
     if (accessToken && refreshToken) {
       const cookieOptions = {
@@ -67,9 +65,8 @@ export const login = async (input: LoginInput): Promise<LoginActionResponse> => 
         sameSite: "lax" as const,
       };
 
-      // cookieStore.set("accessToken", accessToken, cookieOptions)
-      // cookieStore.set("refreshToken", refreshToken, cookieOptions)
-      (await cookieStore).set("accessToken", accessToken, cookieOptions)
+      (await cookieStore).set("accessToken", accessToken, cookieOptions),
+        (await cookieStore).set("refreshToken", refreshToken, cookieOptions)
     } else {
       return {
         error: {
@@ -100,7 +97,6 @@ export const login = async (input: LoginInput): Promise<LoginActionResponse> => 
         statusCode = 503
       }
     }
-    console.error("Catch block error:", error)
 
     return {
       error: {

@@ -2,8 +2,7 @@
 
 import { fetchAuthenticatedApi } from "@/lib/api" // Import the new utility
 import { GetProfileActionResponse, ProfileSuccessResponse } from "../type"
-
-const PROFILE_API_ENDPOINT = "http://localhost:8080/api/v1/authentication/profile"
+import { PROFILE_API_ENDPOINT } from "@/common/constants/api"
 
 export const getProfile = async (): Promise<GetProfileActionResponse> => {
   const apiResponse = await fetchAuthenticatedApi<ProfileSuccessResponse>(
