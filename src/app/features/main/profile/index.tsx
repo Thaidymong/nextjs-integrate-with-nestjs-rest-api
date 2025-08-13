@@ -1,17 +1,25 @@
 "use client"
 
 import Image from "next/image"
-import { Camera, Edit, Ellipsis,MapPinned,Menu, Phone, Plus, Search, User } from "lucide-react"
+import { Camera, Edit, Ellipsis, LogOut, MapPinned, Menu, MoreVertical, Phone, Plus, Search, User } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar" // Using Avatar for profile pic base
 import { BottomNavBar } from "@/components/bottom-navbar";
-import { ProfileData } from "./type"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { useRouter } from 'next/navigation';
+import { removeCookie } from "@/lib/jwt/get-cookie"
 
 interface ProfileScreenProps {
   data?: any
 }
 
 export const ProfileScreen: React.FC<ProfileScreenProps> = ({ data }) => {
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    await Promise.all([removeCookie(['accessToken', 'refreshToken'])]);
+    router.push('/login');
+  };
   return (
     <div className="min-h-screen bg-gray-900 text-white pb-16">
       {/* Top Header */}
@@ -83,7 +91,24 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ data }) => {
               <Edit className="mr-2 h-4 w-4" /> Edit profile
             </Button>
             <Button className="bg-gray-700 text-white hover:bg-gray-600 px-4">
-              <Ellipsis className="h-4 w-4" />
+              {/* <Ellipsis className="h-4 w-4" /> */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant='ghost'
+                    size='icon'
+                    className='text-white hover:bg-transparent hover:text-white'>
+                    <MoreVertical className='h-6 w-6' />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align='end'>
+                  {/* <DropdownMenuItem > */}
+                  <DropdownMenuItem onClick={handleLogout}>
+                    <LogOut className='mr-2 h-4 w-4' />
+                    ចេញ
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </Button>
           </div>
         </div>
@@ -122,7 +147,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ data }) => {
       </div>
 
       {/* Bottom Navigation Bar */}
-      <BottomNavBar />
+      {/* <BottomNavBar /> */}
     </div>
   )
 }

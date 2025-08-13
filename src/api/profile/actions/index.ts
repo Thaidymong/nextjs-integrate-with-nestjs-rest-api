@@ -14,8 +14,14 @@ export const getProfile = async (): Promise<GetProfileActionResponse> => {
 
   if (apiResponse.error) {
     return {
-      error: apiResponse.error,
       data: null,
+      error: {
+        message: "Authentication token not found. Please log in.",
+        extensions: {
+          code: "NO_AUTH_TOKEN",
+          statusCode: 401,
+        },
+      },
     }
   }
 

@@ -29,7 +29,7 @@ export const HomeScreen= () => {
       <main className='space-y-4 p-4'>
         card
       </main>
-      <BottomNavBar />
+      {/* <BottomNavBar /> */}
     </div>
   );
 };

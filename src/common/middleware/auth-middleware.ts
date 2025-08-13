@@ -29,6 +29,14 @@ export function authMiddleware(middleware: CustomMiddleware) {
     //   }
     // }
 
+    // // If the route is public and there is no access token, proceed with the next middleware
+    // if (isPublicRoutes && !accessToken) {
+    //   return middleware(request, event, response);
+    // }
+
+    // if (isProtectedRoutes && !accessToken) {
+    //   return NextResponse.redirect(new URL(ROUTES.LOGIN, request.url));
+    // }
     // If the route is public and there is no access token, proceed with the next middleware
     if (isPublicRoutes && !accessToken) {
       return middleware(request, event, response);
@@ -37,6 +45,7 @@ export function authMiddleware(middleware: CustomMiddleware) {
     if (isProtectedRoutes && !accessToken) {
       return NextResponse.redirect(new URL(ROUTES.LOGIN, request.url));
     }
+
 
     const payload = await decrypt(accessToken, ACCESS_TOKEN_SECRET_KEY);
 

@@ -1,8 +1,8 @@
-import { RestErrorResponse } from "@/app/features/auth/login/type/login"
+import { refreshNewToken } from "@/api/refresh-token/actions"
 import { cookies } from "next/headers"
 
-// Define a generic response type for our API utility
-export interface ApiResponse<T> {
+// Generic API response type
+interface ApiResponse<T> {
     data: T | null
     error: {
         message: string
@@ -13,20 +13,10 @@ export interface ApiResponse<T> {
     } | null
 }
 
-/**
- * Makes an authenticated API request.
- * Automatically retrieves the access token from cookies and includes it in the Authorization header.
- *
- * @param url The full URL of the API endpoint.
- * @param method The HTTP method (e.g., 'GET', 'POST', 'PUT', 'DELETE').
- * @param body Optional request body for POST/PUT requests.
- * @param options Optional fetch options to override or extend.
- * @returns A structured ApiResponse containing data or error.
- */
 export async function fetchAuthenticatedApi<T>(
     url: string,
-    method: "GET" | "POST" | "PUT" | "DELETE",
-    body?: Record<string, any>,
+    method: "GET" | "POST" | "PUT" | "DELETE" = "GET",
+    body?: any,
     options?: RequestInit,
 ): Promise<ApiResponse<T>> {
     const cookieStore = cookies()
@@ -46,83 +36,118 @@ export async function fetchAuthenticatedApi<T>(
         }
     }
 
-    const defaultHeaders = {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${accessToken}`,
-    }
+    const makeRequest = async (token: string): Promise<ApiResponse<T>> => {
+        try {
+            const config: RequestInit = {
+                method,
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                    ...options?.headers,
+                },
+                ...options,
+            }
 
-    try {
-        const response = await fetch(url, {
-            method,
-            headers: {
-                ...defaultHeaders,
-                ...options?.headers, // Allow overriding or adding headers
-            },
-            body: body ? JSON.stringify(body) : undefined,
-            ...options, // Spread any other fetch options
-        })
+            if (body && (method === "POST" || method === "PUT")) {
+                config.body = JSON.stringify(body)
+            }
 
-        if (!response.ok) {
-            let errorData: RestErrorResponse | null = null
-            try {
-                errorData = await response.json()
-            } catch (jsonError) {
-                console.error(`Failed to parse error response JSON from ${url}:`, jsonError)
+            const response = await fetch(url, config)
+
+            if (!response.ok) {
+                let errorData: any = {}
+                try {
+                    errorData = await response.json()
+                } catch (jsonError) {
+                    console.error(`Failed to parse error response JSON from ${url}:`, jsonError)
+                }
+
+                const errorMessage =
+                    errorData?.error?.message || errorData?.message || response.statusText || `Failed request to ${url}`
+                const errorCode = errorData?.error?.error || errorData?.code || "API_ERROR"
+
                 return {
                     data: null,
                     error: {
-                        message: response.statusText || `Unknown error from API: ${url}`,
+                        message: errorMessage,
                         extensions: {
+                            code: errorCode,
                             statusCode: response.status,
                         },
                     },
                 }
             }
 
-            console.error(`API Error Response (Status: ${response.status}) from ${url}:`, errorData)
+            const data = await response.json()
+            return {
+                data,
+                error: null,
+            }
+        } catch (error) {
+            let errorMessage = `An unexpected error occurred during request to ${url}.`
+            let code = "UNKNOWN_FETCH_ERROR"
 
-            const errorMessage = errorData?.error?.message || response.statusText || `Failed request to ${url}`
-            const errorCode = errorData?.error?.error || "API_ERROR"
+            if (error instanceof Error) {
+                errorMessage = error.message
+                if (error.name === "TypeError" && error.message === "Failed to fetch") {
+                    errorMessage = `Network error: Could not connect to ${url}.`
+                    code = "NETWORK_UNREACHABLE"
+                }
+            }
 
             return {
                 data: null,
                 error: {
                     message: errorMessage,
                     extensions: {
-                        code: errorCode,
-                        statusCode: response.status,
+                        code,
+                    },
+                },
+            }
+        }
+    }
+
+    const firstAttempt = await makeRequest(accessToken)
+
+    if (firstAttempt.error?.extensions?.statusCode === 401) {
+        console.log("Access token expired, attempting refresh...")
+
+        const refreshResult = await refreshNewToken(accessToken)
+
+        if (refreshResult.error || !refreshResult.data?.accessToken) {
+            return {
+                data: null,
+                error: {
+                    message: "Session expired. Please log in again.",
+                    extensions: {
+                        code: "SESSION_EXPIRED",
+                        statusCode: 401,
                     },
                 },
             }
         }
 
-        // Assuming successful responses always return JSON
-        const data: T = await response.json()
-        return { data, error: null }
-    } catch (error) {
-        let errorMessage = `An unexpected error occurred during request to ${url}.`
-        let statusCode: number | null = null
-        let code = "UNKNOWN_FETCH_ERROR"
-
-        if (error instanceof Error) {
-            errorMessage = error.message
-            if (error.name === "TypeError" && error.message === "Failed to fetch") {
-                errorMessage = `Network error: Could not connect to ${url}.`
-                code = "NETWORK_UNREACHABLE"
-                statusCode = 503
-            }
-        }
-        console.error(`Catch block error for ${url}:`, error)
-
-        return {
-            data: null,
-            error: {
-                message: errorMessage,
-                extensions: {
-                    code,
-                    // statusCode,
-                },
-            },
-        }
+        // Retry with new access token
+        return makeRequest(refreshResult.data.accessToken)
     }
+
+    return firstAttempt
+}
+
+// Helper function to make authenticated requests with token
+export async function fetchWithAuth<T>(
+    url: string,
+    method: "GET" | "POST" | "PUT" | "DELETE" = "GET",
+    body?: any,
+    accessToken?: string,
+): Promise<ApiResponse<T>> {
+    const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+    }
+
+    if (accessToken) {
+        headers.Authorization = `Bearer ${accessToken}`
+    }
+
+    return fetchAuthenticatedApi<T>(url, method, body, { headers })
 }

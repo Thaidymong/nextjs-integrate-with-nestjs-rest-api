@@ -30,23 +30,40 @@ export const LoginScreen = () => {
     startTransition(async () => {
       const { data, error } = await login(input)
       // Check for data.access_token from the nested data object
+      // if (data?.access_token) {
+      //   // Changed from data?.accessToken to data?.access_token
+      //   toast.success("Login successful!", {
+      //     duration: 3000,
+      //     position: "top-right",
+      //   })
+      //   router.push("/")
+      //   router.refresh()
+      // } else if (error) {
+      //   toast.error(error.message, {
+      //     duration: 5000,
+      //     position: "top-right",
+      //     style: {
+      //       fontSize: "11pt",
+      //       fontFamily: "koh_santepheap, 'Noto Sans Khmer', sans-serif",
+      //     },
+      //   })
+      // }
       if (data?.access_token) {
-        // Changed from data?.accessToken to data?.access_token
         toast.success("Login successful!", {
           duration: 3000,
           position: "top-right",
         })
-        router.push("/")
-        router.refresh()
+        router.push('/');
+        router.refresh();
       } else if (error) {
         toast.error(error.message, {
           duration: 5000,
-          position: "top-right",
+          position: 'top-right',
           style: {
-            fontSize: "11pt",
+            fontSize: '11pt',
             fontFamily: "koh_santepheap, 'Noto Sans Khmer', sans-serif",
           },
-        })
+        });
       }
     })
   }

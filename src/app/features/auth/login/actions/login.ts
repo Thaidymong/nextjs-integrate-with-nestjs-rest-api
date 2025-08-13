@@ -53,8 +53,8 @@ export const login = async (input: LoginInput): Promise<LoginActionResponse> => 
     // Access tokens from the nested 'data' object
     const accessToken = responseBody?.data?.access_token
     const refreshToken = responseBody?.data?.refresh_token
-    console.log({ refreshToken })
-    console.log({ accessToken })
+    // console.log({ refreshToken })
+    // console.log({ accessToken })
 
     if (accessToken && refreshToken) {
       const cookieOptions = {
@@ -64,6 +64,7 @@ export const login = async (input: LoginInput): Promise<LoginActionResponse> => 
         secure: process.env.NODE_ENV === "production",
         sameSite: "lax" as const,
       };
+
 
       (await cookieStore).set("accessToken", accessToken, cookieOptions),
         (await cookieStore).set("refreshToken", refreshToken, cookieOptions)
