@@ -1,8 +1,4 @@
-import {
-  chain,
-  authMiddleware,
-} from './common/middleware';
-import { refreshTokenMiddleware } from './common/middleware/refresh-token-middleware';
+import { chain, authMiddleware } from "./common/middleware";
+import { refreshTokenMiddleware } from "./common/middleware/refresh-token-middleware";
 
-// export default chain([authMiddleware]);
-export default chain([authMiddleware, refreshTokenMiddleware]);
+export default chain([refreshTokenMiddleware, authMiddleware]);
